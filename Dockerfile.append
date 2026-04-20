@@ -1,0 +1,20 @@
+
+# --- Fly.io: /usr/local/bin/hermes shim ---
+# The hermes CLI lives inside the venv at /opt/hermes/.venv/bin/hermes, which
+# the upstream entrypoint activates for the gateway process. But `fly ssh
+# console` spawns a fresh shell without that activation, so interactive
+# commands like `hermes setup` and `hermes doctor` fail with "executable not
+# found". This shim activates the venv and drops to the hermes user so those
+# commands work from a plain SSH session.
+RUN printf '#!/bin/sh\nexec gosu hermes /opt/hermes/.venv/bin/hermes "$@"\n' \
+        > /usr/local/bin/hermes && \
+    chmod +x /usr/local/bin/hermes
+
+# --- Fly.io: run the messaging gateway by default ---
+# Upstream sets ENTRYPOINT=/opt/hermes/docker/entrypoint.sh, which chowns the
+# volume, bootstraps config on first boot, then exec's `hermes "$@"`. We just
+# need to supply the subcommand. `gateway run` runs every configured platform
+# adapter in the foreground — which is what we want under an init system like
+# Fly's. (`gateway start` is for installing a systemd/launchd service on the
+# host and is not supported inside a container.)
+CMD ["gateway", "run"]
