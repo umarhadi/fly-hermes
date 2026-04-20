@@ -1,0 +1,72 @@
+name: Deploy Hermes to Fly.io
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm deployment'
+        required: true
+        default: ''
+
+jobs:
+  deploy:
+    name: Sync and Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          fetch-depth: 0
+      
+      - name: Update hermes-agent submodule to latest main
+        run: |
+          cd hermes-agent
+          git fetch origin main
+          git checkout origin/main
+          cd ..
+      
+      - name: Prepare files for deployment
+        run: |
+          # Reset Dockerfile to upstream (remove any local changes)
+          git -C hermes-agent checkout -- Dockerfile
+          
+          # Copy fly.toml to hermes-agent directory
+          cp fly.toml hermes-agent/
+          
+          # Append Dockerfile.append to hermes-agent/Dockerfile
+          cat Dockerfile.append >> hermes-agent/Dockerfile
+      
+      - name: Install flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      
+      - name: Deploy to Fly.io
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          fly deploy hermes-agent/ --app ${{ secrets.FLY_APP_NAME }}
+      
+      - name: Commit submodule update
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Get the new submodule commit SHA
+          SUBMODULE_SHA=$(git -C hermes-agent rev-parse --short HEAD)
+          
+          # Stage the submodule reference
+          git add hermes-agent
+          
+          # Check if there are changes to commit
+          if git diff --cached --quiet; then
+            echo "No changes to commit - submodule already at correct version"
+            exit 0
+          fi
+          
+          # Commit the submodule update
+          git commit -m "chore: update hermes-agent submodule to ${SUBMODULE_SHA}"
+          
+          # Push the commit
+          git push
