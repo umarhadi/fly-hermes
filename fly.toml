@@ -1,12 +1,16 @@
-# Fly.io app names are globally unique — pick your own
-app = "my-hermes"
-primary_region = "sjc"
+# fly.toml app configuration file generated for very-hermes on 2026-04-20T22:32:57+07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'very-hermes'
+primary_region = 'sin'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [env]
-  HERMES_HOME = "/opt/data"
+  HERMES_HOME = '/opt/data'
 
 # No [http_service] by default — Telegram, Discord, Slack, WhatsApp, and
 # Signal are all outbound-only (long-poll or websocket out to the platform),
@@ -26,10 +30,10 @@ primary_region = "sjc"
 #     hard_limit = 100
 #     soft_limit = 80
 
-[mounts]
-  source = "hermes_data"
-  destination = "/opt/data"
+[[mounts]]
+  source = 'hermes_data'
+  destination = '/opt/data'
 
 [[vm]]
-  size = "shared-cpu-2x"
-  memory = "2gb"
+  size = 'shared-cpu-2x'
+  memory = '2gb'

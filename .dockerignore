@@ -1,0 +1,110 @@
+# flyctl launch added from .gitignore
+**/.env
+**/.env.*
+**/.DS_Store
+**/.worktrees
+
+# flyctl launch added from hermes-agent/.gitignore
+hermes-agent/venv
+hermes-agent/_pycache
+hermes-agent/**/*.pyc*
+hermes-agent/**/__pycache__
+hermes-agent/**/.venv
+hermes-agent/**/.vscode
+hermes-agent/**/.env
+hermes-agent/**/.env.local
+hermes-agent/**/.env.development.local
+hermes-agent/**/.env.test.local
+hermes-agent/**/.env.production.local
+hermes-agent/**/.env.development
+hermes-agent/**/.env.test
+hermes-agent/**/export*
+hermes-agent/**/__pycache__/model_tools.cpython-310.pyc
+hermes-agent/**/__pycache__/web_tools.cpython-310.pyc
+hermes-agent/**/logs
+hermes-agent/**/data
+hermes-agent/**/.pytest_cache
+hermes-agent/**/tmp
+hermes-agent/**/temp_vision_images
+hermes-agent/**/hermes-*/*
+hermes-agent/**/examples
+hermes-agent/**/tests/quick_test_dataset.jsonl
+hermes-agent/**/tests/sample_dataset.jsonl
+hermes-agent/**/run_datagen_kimik2-thinking.sh
+hermes-agent/**/run_datagen_megascience_glm4-6.sh
+hermes-agent/**/run_datagen_sonnet.sh
+hermes-agent/**/source-data/*
+hermes-agent/**/run_datagen_megascience_glm4-6.sh
+hermes-agent/**/data/*
+hermes-agent/**/node_modules
+hermes-agent/**/browser-use
+hermes-agent/**/agent-browser
+# Private keys
+hermes-agent/**/*.ppk
+hermes-agent/**/*.pem
+hermes-agent/**/privvy*
+hermes-agent/**/images
+hermes-agent/**/__pycache__
+hermes-agent/**/hermes_agent.egg-info
+hermes-agent/**/wandb
+hermes-agent/**/testlogs
+
+# CLI config (may contain sensitive SSH paths)
+hermes-agent/**/cli-config.yaml
+
+# Skills Hub state (lives in ~/.hermes/skills/.hub/ at runtime, but just in case)
+hermes-agent/**/skills/.hub
+hermes-agent/**/ignored
+hermes-agent/**/.worktrees
+hermes-agent/**/environments/benchmarks/evals
+
+# Web UI build output
+hermes-agent/**/hermes_cli/web_dist
+
+# Web UI assets — synced from @nous-research/ui at build time via
+# `npm run sync-assets` (see web/package.json).
+hermes-agent/**/web/public/fonts
+hermes-agent/**/web/public/ds-assets
+
+# Release script temp files
+hermes-agent/**/.release_notes.md
+hermes-agent/**/mini-swe-agent
+
+# Nix
+hermes-agent/**/.direnv
+hermes-agent/**/.nix-stamps
+hermes-agent/**/result
+hermes-agent/**/website/static/api/skills-index.json
+
+# flyctl launch added from hermes-agent/optional-skills/creative/meme-generation/scripts/.gitignore
+hermes-agent/optional-skills/creative/meme-generation/scripts/**/.cache
+
+# flyctl launch added from hermes-agent/ui-tui/.gitignore
+hermes-agent/ui-tui/**/dist
+hermes-agent/ui-tui/**/node_modules
+hermes-agent/ui-tui/**/src/*.js
+hermes-agent/ui-tui/**/docs
+
+# flyctl launch added from hermes-agent/website/.gitignore
+# Dependencies
+hermes-agent/website/node_modules
+
+# Production
+hermes-agent/website/build
+
+# Generated files
+hermes-agent/website/**/.docusaurus
+hermes-agent/website/**/.cache-loader
+hermes-agent/website/**/src/data/skills.json
+
+# Misc
+hermes-agent/website/**/.DS_Store
+hermes-agent/website/**/.env.local
+hermes-agent/website/**/.env.development.local
+hermes-agent/website/**/.env.test.local
+hermes-agent/website/**/.env.production.local
+
+hermes-agent/website/**/npm-debug.log*
+hermes-agent/website/**/yarn-debug.log*
+hermes-agent/website/**/yarn-error.log*
+fly.toml
