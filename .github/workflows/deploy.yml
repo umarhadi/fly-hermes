@@ -46,7 +46,7 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
-          fly deploy hermes-agent/ --app ${{ secrets.FLY_APP_NAME }}
+          flyctl deploy hermes-agent/ --app ${{ secrets.FLY_APP_NAME }}
       
       - name: Commit submodule update
         if: success()
