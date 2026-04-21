@@ -61,6 +61,7 @@ fly secrets set TELEGRAM_BOT_TOKEN=123456:ABC-your-token-here --app $APP
 ```bash
 git -C hermes-agent checkout -- Dockerfile \
   && cp fly.toml hermes-agent/ \
+  && cp hermes-shim hermes-agent/ \
   && cat Dockerfile.append >> hermes-agent/Dockerfile \
   && fly deploy hermes-agent/ --app $APP
 ```
@@ -118,6 +119,7 @@ fly logs --app $APP    # tail the gateway while you test
 git -C hermes-agent pull
 git -C hermes-agent checkout -- Dockerfile \
   && cp fly.toml hermes-agent/ \
+  && cp hermes-shim hermes-agent/ \
   && cat Dockerfile.append >> hermes-agent/Dockerfile \
   && fly deploy hermes-agent/ --app $APP
 ```
@@ -211,6 +213,7 @@ fly ssh console --pty --app $APP -C "hermes gateway setup"
 ```bash
 git -C hermes-agent checkout -- Dockerfile \
   && cp fly.toml hermes-agent/ \
+  && cp hermes-shim hermes-agent/ \
   && cat Dockerfile.append >> hermes-agent/Dockerfile \
   && fly deploy hermes-agent/ --app $APP
 fly ips allocate-v6 --app $APP
