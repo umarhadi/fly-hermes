@@ -32,9 +32,10 @@ jobs:
           # Reset Dockerfile to upstream (remove any local changes)
           git -C hermes-agent checkout -- Dockerfile
           
-          # Copy fly.toml to hermes-agent directory
+          # Copy fly.toml and shim script to hermes-agent directory
           cp fly.toml hermes-agent/
-          
+          cp hermes-shim hermes-agent/
+
           # Append Dockerfile.append to hermes-agent/Dockerfile
           cat Dockerfile.append >> hermes-agent/Dockerfile
       

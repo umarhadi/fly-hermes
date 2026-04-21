@@ -6,9 +6,9 @@
 # commands like `hermes setup` and `hermes doctor` fail with "executable not
 # found". This shim activates the venv and drops to the hermes user so those
 # commands work from a plain SSH session.
-RUN printf '#!/bin/sh\nexec gosu hermes /opt/hermes/.venv/bin/hermes "$@"\n' \
-        > /usr/local/bin/hermes && \
-    chmod +x /usr/local/bin/hermes
+# Note: COPY always runs as build-time root regardless of USER, so no USER
+# switch needed — avoids permission issues in rootless BuildKit environments.
+COPY --chmod=0755 hermes-shim /usr/local/bin/hermes
 
 # --- Fly.io: run the messaging gateway by default ---
 # Upstream sets ENTRYPOINT=/opt/hermes/docker/entrypoint.sh, which chowns the
