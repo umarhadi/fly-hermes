@@ -4,4 +4,11 @@
 # gosu is no longer available. We use the absolute path because /command
 # isn't on PATH for fresh `fly ssh console` sessions — s6-overlay's /init
 # normally adds it, but we bypass /init on Fly (PID-1 conflict).
-exec /command/s6-setuidgid hermes /opt/hermes/.venv/bin/hermes "$@"
+#
+# HOME is also forced to /opt/data (the hermes user's home, per
+# `useradd -d /opt/data` in upstream Dockerfile). s6-setuidgid drops
+# UID/GID but does NOT reset HOME, so without this an `fly ssh console`
+# session (HOME=/root) would have hermes (UID 10000) building paths
+# under /root/.local and /root/.config and hitting EACCES — e.g.
+# `hermes doctor` stat'ing /root/.config/systemd/user/hermes-gateway.service.
+HOME=/opt/data exec /command/s6-setuidgid hermes /opt/hermes/.venv/bin/hermes "$@"
