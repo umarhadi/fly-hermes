@@ -30,6 +30,11 @@ RUN printf '%s\n' \
         '# /init normally prepends /command to PATH so main-wrapper.sh can find' \
         '# s6-setuidgid; we bypass /init, so do it here.' \
         'export PATH="/command:${PATH}"' \
+        '# s6-setuidgid drops UID/GID but does NOT reset HOME. Without /init' \
+        '# setting up the environment, HOME stays /root and hermes (UID 10000)' \
+        '# hits EACCES trying to write XDG state under /root/.local. Point HOME' \
+        '# at the hermes user'"'"'s actual home (and the persistent volume).' \
+        'export HOME=/opt/data' \
         'if [ -x /etc/cont-init.d/01-hermes-setup ]; then' \
         '    /etc/cont-init.d/01-hermes-setup' \
         'fi' \
