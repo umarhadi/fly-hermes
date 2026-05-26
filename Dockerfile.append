@@ -10,11 +10,34 @@
 # switch needed — avoids permission issues in rootless BuildKit environments.
 COPY --chmod=0755 hermes-shim /usr/local/bin/hermes
 
+# --- Fly.io: bypass s6-overlay supervisor ---
+# Upstream switched to s6-overlay supervision: ENTRYPOINT=["/init", ".../main-wrapper.sh"].
+# s6-overlay's /init (s6-overlay-suexec) hard-requires PID 1, but Fly's
+# machine init takes PID 1 inside the Firecracker VM, so /init runs as
+# PID 2 and aborts with: "s6-overlay-suexec: fatal: can only run as pid 1".
+#
+# Workaround: replace the s6 /init entrypoint with a small shim that runs
+# only the critical bootstrap cont-init script (01-hermes-setup: UID
+# remap, volume chown, config seed, skills sync) and then exec's
+# main-wrapper.sh — which activates the venv, drops to UID 10000 via
+# s6-setuidgid, and exec's the CMD. The 015-/02- cont-init scripts and
+# s6-rc services exist to supervise the dashboard + per-profile gateways;
+# this single-service VM doesn't need them.
+RUN printf '%s\n' \
+        '#!/bin/sh' \
+        '# Fly.io entrypoint: run the hermes bootstrap, then exec main-wrapper.' \
+        'set -e' \
+        'if [ -x /etc/cont-init.d/01-hermes-setup ]; then' \
+        '    /etc/cont-init.d/01-hermes-setup' \
+        'fi' \
+        'exec /opt/hermes/docker/main-wrapper.sh "$@"' \
+    > /usr/local/bin/fly-entrypoint.sh \
+    && chmod 0755 /usr/local/bin/fly-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/fly-entrypoint.sh"]
+
 # --- Fly.io: run the messaging gateway by default ---
-# Upstream sets ENTRYPOINT=/opt/hermes/docker/entrypoint.sh, which chowns the
-# volume, bootstraps config on first boot, then exec's `hermes "$@"`. We just
-# need to supply the subcommand. `gateway run` runs every configured platform
-# adapter in the foreground — which is what we want under an init system like
-# Fly's. (`gateway start` is for installing a systemd/launchd service on the
-# host and is not supported inside a container.)
+# `gateway run` runs every configured platform adapter in the foreground.
+# (`gateway start` is for installing a systemd/launchd service on the host
+# and is not supported inside a container.)
 CMD ["gateway", "run"]
