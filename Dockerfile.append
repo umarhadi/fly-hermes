@@ -27,12 +27,20 @@ RUN printf '%s\n' \
         '#!/bin/sh' \
         '# Fly.io entrypoint: run the hermes bootstrap, then exec main-wrapper.' \
         'set -e' \
+        '# /init normally prepends /command to PATH so main-wrapper.sh can find' \
+        '# s6-setuidgid; we bypass /init, so do it here.' \
+        'export PATH="/command:${PATH}"' \
         'if [ -x /etc/cont-init.d/01-hermes-setup ]; then' \
         '    /etc/cont-init.d/01-hermes-setup' \
         'fi' \
         'exec /opt/hermes/docker/main-wrapper.sh "$@"' \
     > /usr/local/bin/fly-entrypoint.sh \
     && chmod 0755 /usr/local/bin/fly-entrypoint.sh
+
+# Add /command to the image PATH so `fly ssh console` sessions (which
+# spawn a fresh shell, not via fly-entrypoint.sh) can also find
+# s6-setuidgid and the rest of the s6-overlay utilities.
+ENV PATH="/command:${PATH}"
 
 ENTRYPOINT ["/usr/local/bin/fly-entrypoint.sh"]
 

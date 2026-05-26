@@ -1,5 +1,7 @@
 #!/bin/sh
 # Drop to the hermes user before running the venv'd hermes CLI.
-# Upstream installs s6-overlay (which ships s6-setuidgid); gosu is no
-# longer available in the image.
-exec s6-setuidgid hermes /opt/hermes/.venv/bin/hermes "$@"
+# Upstream installs s6-overlay (which ships s6-setuidgid at /command/);
+# gosu is no longer available. We use the absolute path because /command
+# isn't on PATH for fresh `fly ssh console` sessions — s6-overlay's /init
+# normally adds it, but we bypass /init on Fly (PID-1 conflict).
+exec /command/s6-setuidgid hermes /opt/hermes/.venv/bin/hermes "$@"
