@@ -35,11 +35,16 @@ RUN printf '%s\n' \
         '# hits EACCES trying to write XDG state under /root/.local. Point HOME' \
         '# at the hermes user'"'"'s actual home (and the persistent volume).' \
         'export HOME=/opt/data' \
-        '# main-wrapper.sh uses `#!/command/with-contenv sh`, which exec'"'"'s' \
-        '# `s6-envdir /run/s6/container_environment` to load env vars from that' \
-        '# dir. /init normally creates it at startup; without /init it does not' \
-        '# exist and with-contenv exits 111 ("unable to envdir"). Pre-create an' \
-        '# empty envdir so with-contenv succeeds with no extra vars loaded.' \
+        '# main-wrapper.sh uses `#!/command/with-contenv sh`. with-contenv' \
+        '# normally wipes the env (emptyenv -p, preserving only PATH) and then' \
+        '# reloads vars from /run/s6/container_environment — a dir /init would' \
+        '# populate at startup. Without /init the dir is missing (exit 111) and' \
+        '# also empty (so Fly-injected secrets like TELEGRAM_BOT_TOKEN get' \
+        '# wiped). The with-contenv shim has an explicit escape hatch: if' \
+        '# S6_KEEP_ENV is non-zero it pass-through-execs without touching env.' \
+        '# We use it + pre-create the dir as a safety net for any other script' \
+        '# in the chain that still uses with-contenv defaults.' \
+        'export S6_KEEP_ENV=1' \
         'mkdir -p /run/s6/container_environment' \
         'if [ -x /etc/cont-init.d/01-hermes-setup ]; then' \
         '    /etc/cont-init.d/01-hermes-setup' \
