@@ -35,6 +35,12 @@ RUN printf '%s\n' \
         '# hits EACCES trying to write XDG state under /root/.local. Point HOME' \
         '# at the hermes user'"'"'s actual home (and the persistent volume).' \
         'export HOME=/opt/data' \
+        '# main-wrapper.sh uses `#!/command/with-contenv sh`, which exec'"'"'s' \
+        '# `s6-envdir /run/s6/container_environment` to load env vars from that' \
+        '# dir. /init normally creates it at startup; without /init it does not' \
+        '# exist and with-contenv exits 111 ("unable to envdir"). Pre-create an' \
+        '# empty envdir so with-contenv succeeds with no extra vars loaded.' \
+        'mkdir -p /run/s6/container_environment' \
         'if [ -x /etc/cont-init.d/01-hermes-setup ]; then' \
         '    /etc/cont-init.d/01-hermes-setup' \
         'fi' \
