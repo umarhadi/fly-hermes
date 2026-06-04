@@ -1,14 +1,20 @@
 #!/bin/sh
 # Drop to the hermes user before running the venv'd hermes CLI.
-# Upstream installs s6-overlay (which ships s6-setuidgid at /command/);
-# gosu is no longer available. We use the absolute path because /command
-# isn't on PATH for fresh `fly ssh console` sessions — s6-overlay's /init
-# normally adds it, but we bypass /init on Fly (PID-1 conflict).
 #
-# HOME is also forced to /opt/data (the hermes user's home, per
-# `useradd -d /opt/data` in upstream Dockerfile). s6-setuidgid drops
-# UID/GID but does NOT reset HOME, so without this an `fly ssh console`
-# session (HOME=/root) would have hermes (UID 10000) building paths
-# under /root/.local and /root/.config and hitting EACCES — e.g.
-# `hermes doctor` stat'ing /root/.config/systemd/user/hermes-gateway.service.
-HOME=/opt/data exec /command/s6-setuidgid hermes /opt/hermes/.venv/bin/hermes "$@"
+# We use setpriv instead of s6-setuidgid/s6-applyuidgid: Fly.io's Firecracker
+# sandbox blocks the setgroups() syscall (EPERM), which s6-applyuidgid calls
+# unconditionally regardless of whether supplementary groups change. setpriv
+# with only --reuid/--regid skips that syscall entirely.
+#
+# HOME is forced to /opt/data (the hermes user's actual home). Without this,
+# a `fly ssh console` session (HOME=/root) causes hermes (UID 10000) to
+# build paths under /root/.local and /root/.config and hit EACCES.
+#
+# Guard: if already running as hermes (UID 10000), exec directly — calling
+# any setuid helper from a non-root process also fails with EPERM.
+export HOME=/opt/data
+if [ "$(id -u)" = "0" ]; then
+    exec setpriv --reuid=10000 --regid=10000 /opt/hermes/.venv/bin/hermes "$@"
+else
+    exec /opt/hermes/.venv/bin/hermes "$@"
+fi

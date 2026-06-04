@@ -27,12 +27,12 @@ RUN printf '%s\n' \
         '#!/bin/sh' \
         '# Fly.io entrypoint: run the hermes bootstrap, then exec main-wrapper.' \
         'set -e' \
-        '# /init normally prepends /command to PATH so main-wrapper.sh can find' \
-        '# s6-setuidgid; we bypass /init, so do it here.' \
+        '# /init normally prepends /command to PATH so scripts in the chain can' \
+        '# find s6 utilities; we bypass /init, so do it here.' \
         'export PATH="/command:${PATH}"' \
-        '# s6-setuidgid drops UID/GID but does NOT reset HOME. Without /init' \
-        '# setting up the environment, HOME stays /root and hermes (UID 10000)' \
-        '# hits EACCES trying to write XDG state under /root/.local. Point HOME' \
+        '# The privilege-drop (now via setpriv, patched below) does NOT reset HOME.' \
+        '# Without /init setting up the environment, HOME stays /root and hermes' \
+        '# (UID 10000) hits EACCES writing XDG state under /root/.local. Point HOME' \
         '# at the hermes user'"'"'s actual home (and the persistent volume).' \
         'export HOME=/opt/data' \
         '# main-wrapper.sh uses `#!/command/with-contenv sh`. with-contenv' \
@@ -52,6 +52,15 @@ RUN printf '%s\n' \
         'exec /opt/hermes/docker/main-wrapper.sh "$@"' \
     > /usr/local/bin/fly-entrypoint.sh \
     && chmod 0755 /usr/local/bin/fly-entrypoint.sh
+
+# --- Fly.io: patch main-wrapper.sh to avoid s6-setuidgid ---
+# s6-setuidgid / s6-applyuidgid call setgroups() unconditionally, which is
+# blocked by Fly.io's Firecracker seccomp profile (EPERM). Replace the drop()
+# helper's privilege-drop with setpriv --reuid/--regid, which changes UID/GID
+# without touching the supplementary group list and so avoids the syscall.
+RUN sed -i \
+    's|set -- s6-setuidgid hermes "\$@"|set -- setpriv --reuid=10000 --regid=10000 "$@"|g' \
+    /opt/hermes/docker/main-wrapper.sh
 
 # Add /command to the image PATH so `fly ssh console` sessions (which
 # spawn a fresh shell, not via fly-entrypoint.sh) can also find
