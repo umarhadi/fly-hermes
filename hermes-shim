@@ -4,7 +4,9 @@
 # We use setpriv instead of s6-setuidgid/s6-applyuidgid: Fly.io's Firecracker
 # sandbox blocks the setgroups() syscall (EPERM), which s6-applyuidgid calls
 # unconditionally regardless of whether supplementary groups change. setpriv
-# with only --reuid/--regid skips that syscall entirely.
+# with --keep-groups skips that syscall entirely while satisfying newer
+# setpriv versions that require an explicit supplementary-groups policy
+# when --regid is used.
 #
 # HOME is forced to /opt/data (the hermes user's actual home). Without this,
 # a `fly ssh console` session (HOME=/root) causes hermes (UID 10000) to
@@ -14,7 +16,7 @@
 # any setuid helper from a non-root process also fails with EPERM.
 export HOME=/opt/data
 if [ "$(id -u)" = "0" ]; then
-    exec setpriv --reuid=10000 --regid=10000 /opt/hermes/.venv/bin/hermes "$@"
+    exec setpriv --reuid=10000 --regid=10000 --keep-groups /opt/hermes/.venv/bin/hermes "$@"
 else
     exec /opt/hermes/.venv/bin/hermes "$@"
 fi

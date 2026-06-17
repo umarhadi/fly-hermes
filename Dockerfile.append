@@ -56,10 +56,11 @@ RUN printf '%s\n' \
 # --- Fly.io: patch main-wrapper.sh to avoid s6-setuidgid ---
 # s6-setuidgid / s6-applyuidgid call setgroups() unconditionally, which is
 # blocked by Fly.io's Firecracker seccomp profile (EPERM). Replace the drop()
-# helper's privilege-drop with setpriv --reuid/--regid, which changes UID/GID
-# without touching the supplementary group list and so avoids the syscall.
+# helper's privilege-drop with setpriv --reuid/--regid --keep-groups, which
+# changes UID/GID without touching the supplementary group list and so avoids
+# the syscall while satisfying newer setpriv argument validation.
 RUN sed -i \
-    's|set -- s6-setuidgid hermes "\$@"|set -- setpriv --reuid=10000 --regid=10000 "$@"|g' \
+    's|set -- s6-setuidgid hermes "\$@"|set -- setpriv --reuid=10000 --regid=10000 --keep-groups "$@"|g' \
     /opt/hermes/docker/main-wrapper.sh
 
 # Add /command to the image PATH so `fly ssh console` sessions (which
