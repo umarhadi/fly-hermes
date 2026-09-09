@@ -14,6 +14,7 @@ This repo deploys [NousResearch/hermes-agent](https://github.com/NousResearch/he
 | `fly.toml` | Fly.io app config — app name `very-hermes`, region `sin`, 2GB shared-cpu-2x VM, `/opt/data` mount |
 | `Dockerfile.append` | Appended to upstream `hermes-agent/Dockerfile` at deploy time — adds the shim and sets `CMD ["gateway", "run"]` |
 | `hermes-shim` | Shell script (`exec gosu hermes /opt/hermes/.venv/bin/hermes "$@"`) copied to `/usr/local/bin/hermes` so `fly ssh console` works |
+| `hermes-gateway-supervisor.sh` | Forks one `hermes gateway run` per profile in `HERMES_GATEWAY_PROFILES` and restarts crashed children; used as the `app` process in `fly.toml` |
 | `.github/workflows/deploy.yml` | Manual `workflow_dispatch` workflow: sync submodule → prepare files → flyctl deploy → commit ref |
 | `docs/superpowers/` | Design spec and implementation plan for the workflow |
 
@@ -31,6 +32,7 @@ git -C hermes-agent checkout -- Dockerfile
 # 3. Overlay Fly.io-specific files
 cp fly.toml hermes-agent/
 cp hermes-shim hermes-agent/
+cp hermes-gateway-supervisor.sh hermes-agent/
 cat Dockerfile.append >> hermes-agent/Dockerfile
 
 # 4. Deploy

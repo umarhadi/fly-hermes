@@ -33,6 +33,7 @@ jobs:
           # Copy fly.toml and shim script to hermes-agent directory
           cp fly.toml hermes-agent/
           cp hermes-shim hermes-agent/
+          cp hermes-gateway-supervisor.sh hermes-agent/
 
           # Append Dockerfile.append to hermes-agent/Dockerfile
           cat Dockerfile.append >> hermes-agent/Dockerfile
