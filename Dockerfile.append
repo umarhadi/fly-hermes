@@ -70,8 +70,25 @@ ENV PATH="/command:${PATH}"
 
 ENTRYPOINT ["/usr/local/bin/fly-entrypoint.sh"]
 
+# --- Fly.io: multi-profile gateway supervision ---
+# By default the image boots straight into `gateway run` for a single
+# profile. To run more than one profile's gateway in the same Machine
+# (e.g. "default" plus a separate "family" WhatsApp-bot profile), this
+# copies in a tiny POSIX-sh supervisor that forks one `hermes [-p
+# <profile>] gateway run` per entry in $HERMES_GATEWAY_PROFILES and
+# restarts any child that exits — so one profile's gateway crashing
+# doesn't kill the others or require a full Machine restart.
+#
+# Set HERMES_GATEWAY_PROFILES in fly.toml's [env] (space-separated,
+# "default" for the primary profile) to opt in. Leaving it unset keeps
+# the previous single-profile behavior via `gateway run` below.
+COPY --chmod=0755 hermes-gateway-supervisor.sh /usr/local/bin/hermes-gateway-supervisor.sh
+
 # --- Fly.io: run the messaging gateway by default ---
 # `gateway run` runs every configured platform adapter in the foreground.
 # (`gateway start` is for installing a systemd/launchd service on the host
-# and is not supported inside a container.)
+# and is not supported inside a container.) When HERMES_GATEWAY_PROFILES
+# is set, fly-entrypoint.sh's `exec "$@"` instead runs the supervisor
+# script above via the CMD override in fly.toml (see README/Multi-profile
+# gateways).
 CMD ["gateway", "run"]
