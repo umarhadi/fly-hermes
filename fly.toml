@@ -11,6 +11,13 @@ primary_region = 'sin'
 
 [env]
   HERMES_HOME = '/opt/data'
+  # Run both the default profile's gateway and the "family" WhatsApp-bot
+  # profile's gateway in this Machine, supervised independently (see
+  # hermes-gateway-supervisor.sh). Space-separated profile names.
+  HERMES_GATEWAY_PROFILES = 'default family'
+
+[processes]
+  app = "/usr/local/bin/hermes-gateway-supervisor.sh"
 
 # No [http_service] by default — Telegram, Discord, Slack, WhatsApp, and
 # Signal are all outbound-only (long-poll or websocket out to the platform),
