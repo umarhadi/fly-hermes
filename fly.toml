@@ -11,10 +11,11 @@ primary_region = 'sin'
 
 [env]
   HERMES_HOME = '/opt/data'
-  # Run both the default profile's gateway and the "family" WhatsApp-bot
-  # profile's gateway in this Machine, supervised independently (see
-  # hermes-gateway-supervisor.sh). Space-separated profile names.
-  HERMES_GATEWAY_PROFILES = 'default family'
+  # Hermes now multiplexes every profile (incl. "family") from ONE gateway on
+  # the default profile. A separate `-p family` gateway just exits ("One gateway
+  # per host serves every profile") and the supervisor restart-loops it, so run
+  # only the default. Also set as a Fly secret, which takes precedence.
+  HERMES_GATEWAY_PROFILES = 'default'
 
 [processes]
   app = "/usr/local/bin/hermes-gateway-supervisor.sh"
