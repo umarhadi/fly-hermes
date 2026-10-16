@@ -45,6 +45,10 @@ def main() -> int:
     applied = skipped = 0
     for patch in PATCHES:
         path = ROOT / patch["file"]
+        if not path.is_file():
+            print(f"::warning::[patch] {patch['name']}: {patch['file']} not found — SKIPPED")
+            skipped += 1
+            continue
         text = path.read_text(encoding="utf-8")
         if patch["new"] in text:
             print(f"[patch] {patch['name']}: already applied")
@@ -55,8 +59,14 @@ def main() -> int:
                   "(upstream changed; re-check whether the bug is fixed)")
             skipped += 1
             continue
-        path.write_text(text.replace(patch["old"], patch["new"]), encoding="utf-8")
-        compile(path.read_text(encoding="utf-8"), str(path), "exec")
+        patched = text.replace(patch["old"], patch["new"])
+        try:
+            compile(patched, str(path), "exec")
+        except SyntaxError as exc:
+            print(f"::warning::[patch] {patch['name']}: result does not compile ({exc}) — SKIPPED")
+            skipped += 1
+            continue
+        path.write_text(patched, encoding="utf-8")
         print(f"[patch] {patch['name']}: applied to {patch['file']}")
         applied += 1
     print(f"[patch] done: {applied} applied, {skipped} skipped")
